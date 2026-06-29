@@ -56,35 +56,44 @@ if (-not $ready) { Write-Error "Streamlit did not start within 30 seconds" }
 
 ## Step 3 — Screenshot the running app
 
-Use `chromium-cli` to capture what a visitor sees:
+On Windows, use the `PrintWindow` API to capture the Edge browser window directly — this works even when VS Code or another window is in the foreground:
 
-```bash
-chromium-cli --session bank-ops-demo <<'EOF'
-nav http://localhost:8501
-wait-for text=Bank Ops Intelligence Platform
-screenshot
-EOF
+```powershell
+Add-Type @"
+using System; using System.Drawing; using System.Runtime.InteropServices;
+public class WindowCapture {
+    [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdc, uint nFlags);
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT { public int Left, Top, Right, Bottom; }
+    public static Bitmap CaptureWindow(IntPtr hwnd) {
+        RECT rc; GetWindowRect(hwnd, out rc);
+        int w = rc.Right - rc.Left; int h = rc.Bottom - rc.Top;
+        if (w <= 0 || h <= 0) return null;
+        var bmp = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        using (var g = Graphics.FromImage(bmp)) { PrintWindow(hwnd, g.GetHdc(), 2); g.ReleaseHdc(); }
+        return bmp;
+    }
+}
+"@ -ReferencedAssemblies System.Drawing
+
+$edge = Get-Process | Where-Object { $_.Name -match "msedge|chrome|firefox" -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$bmp = [WindowCapture]::CaptureWindow($edge.MainWindowHandle)
+$path = "C:\Users\basav\AppData\Local\Temp\claude\bank-ops-demo-screenshot.png"
+$bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
+Write-Output "Screenshot saved to $path"
 ```
 
-Screenshot saves to: `chromium_cli/sessions/bank-ops-demo/screenshots/screenshot.png`
+Then use the Read tool on `C:\Users\basav\AppData\Local\Temp\claude\bank-ops-demo-screenshot.png` to display the live dashboard to the user.
 
-Read the screenshot file and display it to the user with the Read tool so they can see the live dashboard.
-
----
-
-## Step 4 — Walk through the demo flow
-
-After confirming the app is up, guide the demo through these steps using `chromium-cli`:
-
-```bash
-chromium-cli --session bank-ops-demo <<'EOF'
-nav http://localhost:8501
-wait-for text=Bank Ops Intelligence Platform
-screenshot
-wait-for text=Stage Performance
-screenshot
-EOF
-```
+> **Note:** If `chromium-cli` is available (Linux/Mac environments), use this instead:
+> ```bash
+> chromium-cli --session bank-ops-demo <<'EOF'
+> nav http://localhost:8501
+> wait-for text=Bank Ops Intelligence Platform
+> screenshot
+> EOF
+> ```
 
 **Key screens to show stakeholders:**
 1. **Workflow selector** — pick any of the four workflows from the dropdown
