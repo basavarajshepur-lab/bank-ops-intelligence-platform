@@ -49,6 +49,95 @@ A three-sentence summary written for a COO or Head of Operations — the kind of
 
 ---
 
+## What Data Does the Platform Need?
+
+### The Simple Explanation
+
+Think of a banking process as a production line — a mortgage application moves from one workstation to the next until it's done. The platform needs a data card for each workstation. That card answers six questions about that step:
+
+1. **What is this step called?** (e.g. "Legal Review")
+2. **How long does it take on average?** (in hours)
+3. **How many people have to touch it?** (number of human handoffs)
+4. **How often does it go wrong and have to be redone?** (as a percentage)
+5. **What proportion of cases finish this step on time?** (as a percentage)
+6. **How many cases go through it each month?**
+
+Plus three pieces of information about the overall process:
+
+- **What is the process called?**
+- **What is the target number of days to complete the whole thing?** (the SLA)
+- **What does this process cost the bank per year?** (in £)
+
+That is the complete input. No proprietary data formats, no complex integrations required — just these numbers, which every operations team already tracks in some form.
+
+---
+
+### Input Schema — Field by Field
+
+#### Workflow level (one set per process)
+
+| Field | What it means | Example |
+|---|---|---|
+| Workflow name | The name of the end-to-end process | `Residential Mortgage Origination` |
+| SLA target (days) | How many working days the whole process should take | `15 days` |
+| Annual cost (£) | Total annual cost of running this process | `£4,200,000` |
+
+#### Stage level (one row for each step in the process)
+
+| Field | What it means | Format | Example |
+|---|---|---|---|
+| Stage name | Name of this process step | Text | `Legal Review` |
+| Average processing hours | How long this step takes per case on average | Hours (not days) | `120 hours` |
+| Manual touchpoints | Number of times a human has to intervene or hand off | Whole number | `8` |
+| Error rate | Percentage of cases that need rework or correction | Decimal: `0.22` = 22% | `0.22` |
+| SLA compliance | Percentage of cases that finish this step on time | Decimal: `0.38` = 38% | `0.38` |
+| Monthly volume | Number of cases flowing through this step each month | Whole number | `450` |
+
+> **Two things to watch:** Processing time is in **hours** (the platform converts to days using an 8-hour working day). Error rate and SLA compliance are written as decimals — 22% becomes `0.22`, not `22`.
+
+---
+
+### Worked Example — Residential Mortgage Origination
+
+Here is exactly what the input looks like for a six-stage mortgage process:
+
+**Workflow header:**
+- Name: Residential Mortgage Origination
+- SLA target: 15 days
+- Annual cost: £4,200,000
+
+**Stages:**
+
+| Stage | Avg Hours | Human Handoffs | Error Rate | On-Time Rate | Cases/Month |
+|---|---|---|---|---|---|
+| Application Submission | 2h | 3 | 8% | 95% | 500 |
+| Credit Assessment | 24h | 5 | 15% | 72% | 500 |
+| Property Valuation | 72h | 2 | 12% | 55% | 470 |
+| **Legal Review** ⚠ | **120h** | **8** | **22%** | **38%** | 450 |
+| Offer Generation | 8h | 4 | 5% | 88% | 430 |
+| Completion | 48h | 6 | 10% | 71% | 420 |
+
+The platform immediately identifies **Legal Review** as the primary bottleneck: it takes the longest (120 hours), has the highest error rate (22%), and only 38% of cases complete it on time — triggering the AI root cause analysis and recommendations.
+
+---
+
+### Where Does This Data Come From in a Real Bank?
+
+Banks already collect all six data points — they just rarely see them assembled in one place. Common sources:
+
+| Data point | Typical source |
+|---|---|
+| Stage names and sequence | Process maps, BPM tools (Pega, Appian), or operations documentation |
+| Processing hours | Core banking system timestamps, case management exports |
+| Manual touchpoints | Workflow system audit logs, operations team records |
+| Error / rework rate | Quality management reports, case management rework flags |
+| SLA compliance | Operations MI dashboards, SLA reporting tools |
+| Monthly volume | Core banking transaction counts, case management reports |
+
+In the current version, all data is synthetic — realistic values modelled on real banking operations. In a production deployment, this data would be pulled directly from the bank's existing systems. No new data collection infrastructure is required.
+
+---
+
 ## The Four Workflows Covered
 
 | Workflow | SLA Target | Typical Annual Cost | Biggest Pain Point |

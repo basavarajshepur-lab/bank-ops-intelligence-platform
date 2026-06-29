@@ -216,6 +216,68 @@ To use it, open this project in Claude Code and type `/demo` at the prompt. No m
 
 ---
 
+## Input Data Format
+
+The platform accepts one **workflow** at a time. Each workflow has two levels of input: workflow-level metadata and per-stage metrics.
+
+### Workflow-level fields
+
+| Field | Type | Description | Example |
+|---|---|---|---|
+| `workflow_name` | `str` | Human-readable name for the process | `"Residential Mortgage Origination"` |
+| `sla_target_days` | `float` | Agreed end-to-end completion target in working days | `15` |
+| `estimated_annual_cost_gbp` | `int` | Total annual operations cost for this workflow (£) | `4200000` |
+
+### Stage-level fields (one row per process step)
+
+Each workflow contains a list of stages. Every stage is a tuple of exactly **6 values** in this order:
+
+| Position | Field | Type | Description | Example |
+|---|---|---|---|---|
+| 1 | `stage_name` | `str` | Name of the process step | `"Legal Review"` |
+| 2 | `avg_processing_hours` | `float` | Average hours this step takes per case | `120.0` |
+| 3 | `manual_touchpoints` | `int` | Number of human handoffs or interventions in this step | `8` |
+| 4 | `error_rate` | `float` (0.0–1.0) | Proportion of cases that require rework or correction | `0.22` → 22% |
+| 5 | `sla_compliance` | `float` (0.0–1.0) | Proportion of cases completing this step on time | `0.38` → 38% |
+| 6 | `volume_monthly` | `int` | Number of cases flowing through this step per month | `450` |
+
+> **Notes:**
+> - Processing time is expressed in **hours**, not days. The platform converts to days using an 8-hour working day.
+> - `error_rate` and `sla_compliance` are **decimal fractions**, not percentages (e.g. 22% = `0.22`).
+> - A minimum of **2 stages** is required (the bottleneck scorer flags the top 2).
+
+### Example input (Residential Mortgage Origination)
+
+```python
+workflow = {
+    "name": "Residential Mortgage Origination",
+    "sla_target_days": 15,
+    "estimated_annual_cost_gbp": 4_200_000,
+    "stages": [
+        # (stage_name,           avg_hours, manual_touchpoints, error_rate, sla_compliance, volume_monthly)
+        ("Application Submission",   2,     3,    0.08,  0.95,  500),
+        ("Credit Assessment",        24,    5,    0.15,  0.72,  500),
+        ("Property Valuation",       72,    2,    0.12,  0.55,  470),
+        ("Legal Review",             120,   8,    0.22,  0.38,  450),   # ← flagged as primary bottleneck
+        ("Offer Generation",         8,     4,    0.05,  0.88,  430),
+        ("Completion",               48,    6,    0.10,  0.71,  420),
+    ],
+}
+```
+
+### Where this data comes from in production
+
+| Source | What it provides |
+|---|---|
+| Core banking system (e.g. Temenos, Thought Machine) | Processing times, volume, stage completion timestamps |
+| BPM / workflow tool (e.g. Pega, Appian) | Stage durations, handoff counts, rework flags |
+| Operations MI spreadsheets | SLA compliance rates, error/rework rates |
+| Case management system | Monthly volume per stage |
+
+The current release uses synthetic data in `data/sample_workflows.py` that mirrors realistic production values. In a production deployment, this data would be extracted from the bank's existing systems and passed directly into the pipeline.
+
+---
+
 ## Project Structure
 
 ```
