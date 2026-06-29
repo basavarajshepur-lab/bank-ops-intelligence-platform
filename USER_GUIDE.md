@@ -166,6 +166,52 @@ That is it. No consultants, no audit, no three-week wait.
 
 ---
 
+## Running a Live Demo
+
+### The `/demo` Skill — One Command to Show the Platform in Action
+
+If you want to demonstrate the platform to a customer, a bank, or any stakeholder, there is a built-in demo skill that does the heavy lifting for you. No manual server setup, no command-line knowledge required.
+
+**What it does:**
+1. Clears any previous session running in the background
+2. Starts the Streamlit app automatically
+3. Waits until the platform is fully loaded and ready
+4. Takes a screenshot of the live dashboard so you can see it immediately
+5. Guides you through the full demo flow screen by screen
+
+**How to use it:**
+
+Open this project in [Claude Code](https://claude.ai/code) and type:
+
+```
+/demo
+```
+
+That is it. Claude Code reads the skill, launches the app, and walks you through the demo.
+
+**What you can show stakeholders during a demo:**
+
+| Screen | What to highlight |
+|---|---|
+| Workflow selector | Four real banking processes available out of the box |
+| KPI metrics row | End-to-end time vs SLA target — the gap that costs money |
+| Stage Performance table | Bottleneck stages flagged with ⚠ — no ambiguity |
+| Processing Time chart | Red bars = where the delays are |
+| SLA Compliance chart | Which stages are below the 85% industry benchmark |
+| Run AI Analysis | One click triggers Claude root cause + recommendations |
+| Executive Summary | Three sentences a COO can take to a board meeting |
+| Recommendations tab | Prioritised actions with time savings and complexity ratings |
+
+**Built-in talking points (included in the skill):**
+- No consultants, no audit, no three-week wait — full analysis in under five seconds
+- Three output layers, not just a dashboard: metrics, root cause, recommendations
+- Explainable AI — every recommendation shows its reasoning, no black boxes
+- Powered by Claude — the same AI used by leading financial institutions
+
+The full skill script, troubleshooting guide, and stop instructions are in [`.claude/skills/demo/SKILL.md`](.claude/skills/demo/SKILL.md).
+
+---
+
 ## A Note on the Data
 
 The workflow data used in the platform is synthetic — it reflects realistic patterns drawn from real banking operations but does not contain any actual bank data. This means the platform can be demonstrated freely and safely without confidentiality concerns. In a production deployment, the platform would connect to the bank's own operational data sources.

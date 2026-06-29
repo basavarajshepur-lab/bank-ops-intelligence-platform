@@ -204,6 +204,16 @@ python -m streamlit run app.py
 
 The workflow metrics and charts load immediately without an API key. Click **Run AI Analysis** (requires API key) to trigger the Claude agents.
 
+### 4. Run a customer or bank demo with one command
+
+If you are using [Claude Code](https://claude.ai/code), a `/demo` skill is included in this repo. It starts the Streamlit server, waits for it to be ready, screenshots the live dashboard, and walks you through the full demo flow with built-in stakeholder talking points.
+
+```
+/demo
+```
+
+To use it, open this project in Claude Code and type `/demo` at the prompt. No manual server management needed — the skill handles launch, screenshot, and shutdown. See [`.claude/skills/demo/SKILL.md`](.claude/skills/demo/SKILL.md) for the full script and troubleshooting guide.
+
 ---
 
 ## Project Structure
@@ -213,6 +223,7 @@ bank-ops-intelligence-platform/
 ├── app.py                        # Streamlit UI
 ├── requirements.txt
 ├── .env.example
+├── USER_GUIDE.md                 # Plain-language guide for non-technical readers
 ├── agents/
 │   ├── bottleneck_analyser.py    # Pure Python: stage scoring
 │   ├── root_cause_agent.py       # Claude: root cause identification
@@ -220,8 +231,12 @@ bank-ops-intelligence-platform/
 ├── core/
 │   ├── models.py                 # Pydantic data contracts
 │   └── pipeline.py               # Agent orchestration
-└── data/
-    └── sample_workflows.py       # Synthetic bank ops data
+├── data/
+│   └── sample_workflows.py       # Synthetic bank ops data
+└── .claude/
+    └── skills/
+        └── demo/
+            └── SKILL.md          # /demo skill: one-command customer demo launcher
 ```
 
 ---
